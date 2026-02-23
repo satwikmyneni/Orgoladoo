@@ -14,7 +14,7 @@ const ProtectedRoute = ({ children }: Props) => {
     }
 
     if (!session) {
-        return <Navigate to="/admin-login" replace />;
+        return <Navigate to="/adminlogin" replace />;
     }
 
     return <>{children}</>;
