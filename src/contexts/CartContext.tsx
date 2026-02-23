@@ -75,7 +75,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
   const totalPrice = items.reduce(
-    (sum, i) => sum + i.price * i.quantity,
+    (sum, i) => sum + Number(i.price) * i.quantity,
     0
   );
 
@@ -137,20 +137,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
 
     // 4️⃣ Build message
-
     const usdFormatter = new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD'
     });
 
     let message = `Hello,
-const usdFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD'
-});
-
-let message = `Hello,
-
 
 Order ID: ${orderNumber}
 
@@ -161,34 +153,25 @@ Items:
 
 `;
 
-<<<<<<< HEAD
     items.forEach(item => {
-      const numericPrice = Number(item.price.toString().replace(/[^0-9.]/g, ""));
+      const numericPrice = Number(
+        item.price.toString().replace(/[^0-9.]/g, '')
+      );
       const subtotal = numericPrice * item.quantity;
 
       message += `- ${item.productName}
-=======
-items.forEach(item => {
-  const numericPrice = Number(item.price.toString().replace(/[^0-9.]/g, ""));
-  const subtotal = numericPrice * item.quantity;
-
-  message += `- ${item.productName}
->>>>>>> 37c4c1aa4800360052f61e1ccafdfbf55fb75a10
   Weight: ${item.weight}
   Sweetness: ${item.sweetness}
   Quantity: ${item.quantity}
   Subtotal: ${usdFormatter.format(subtotal)}
 
 `;
-});
+    });
 
-<<<<<<< HEAD
     message += `Total: ${usdFormatter.format(totalPrice)}
-=======
-message += `Total: ${usdFormatter.format(totalPrice)}
->>>>>>> 37c4c1aa4800360052f61e1ccafdfbf55fb75a10
 
 Please confirm availability.`;
+
     const url = `https://wa.me/${settings.whatsapp_number}?text=${encodeURIComponent(
       message
     )}`;
@@ -221,6 +204,7 @@ Please confirm availability.`;
 
 export const useCart = () => {
   const context = useContext(CartContext);
-  if (!context) throw new Error('useCart must be used within CartProvider');
+  if (!context)
+    throw new Error('useCart must be used within CartProvider');
   return context;
 };
