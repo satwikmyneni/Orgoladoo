@@ -173,7 +173,7 @@ Please confirm availability.`;
       message
     )}`;
 
-    window.open(url, '_blank');
+    window.open(url, '_self');
 
     clearCart();
     setIsCartOpen(false);
