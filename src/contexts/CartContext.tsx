@@ -137,21 +137,20 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
 
     // 4️⃣ Build message
-<<<<<<< HEAD
+
     const usdFormatter = new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD'
     });
 
     let message = `Hello,
-=======
 const usdFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'USD'
 });
 
 let message = `Hello,
->>>>>>> 37c4c1aa4800360052f61e1ccafdfbf55fb75a10
+
 
 Order ID: ${orderNumber}
 
