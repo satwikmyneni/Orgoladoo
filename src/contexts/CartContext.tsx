@@ -137,12 +137,21 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
 
     // 4️⃣ Build message
+<<<<<<< HEAD
     const usdFormatter = new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD'
     });
 
     let message = `Hello,
+=======
+const usdFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD'
+});
+
+let message = `Hello,
+>>>>>>> 37c4c1aa4800360052f61e1ccafdfbf55fb75a10
 
 Order ID: ${orderNumber}
 
@@ -153,28 +162,39 @@ Items:
 
 `;
 
+<<<<<<< HEAD
     items.forEach(item => {
       const numericPrice = Number(item.price.toString().replace(/[^0-9.]/g, ""));
       const subtotal = numericPrice * item.quantity;
 
       message += `- ${item.productName}
+=======
+items.forEach(item => {
+  const numericPrice = Number(item.price.toString().replace(/[^0-9.]/g, ""));
+  const subtotal = numericPrice * item.quantity;
+
+  message += `- ${item.productName}
+>>>>>>> 37c4c1aa4800360052f61e1ccafdfbf55fb75a10
   Weight: ${item.weight}
   Sweetness: ${item.sweetness}
   Quantity: ${item.quantity}
   Subtotal: ${usdFormatter.format(subtotal)}
 
 `;
-    });
+});
 
+<<<<<<< HEAD
     message += `Total: ${usdFormatter.format(totalPrice)}
+=======
+message += `Total: ${usdFormatter.format(totalPrice)}
+>>>>>>> 37c4c1aa4800360052f61e1ccafdfbf55fb75a10
 
 Please confirm availability.`;
-
     const url = `https://wa.me/${settings.whatsapp_number}?text=${encodeURIComponent(
       message
     )}`;
 
-    window.open(url, '_blank');
+    window.open(url, '_self');
 
     clearCart();
     setIsCartOpen(false);
