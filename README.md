@@ -46,7 +46,6 @@ The project is deployed via Netlify and accessible at:
 
 https://organicladoo.netlify.app
 
-Publishing updates is managed directly through Lovable’s deployment workflow.
 
 **Domain Configuration**
 
