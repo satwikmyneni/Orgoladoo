@@ -1,132 +1,242 @@
 import { useParams, Link } from 'react-router-dom';
-import { useState } from 'react';
-import { products } from '@/data/products';
-import { SweetnessOption, WeightOption } from '@/types/product';
+import { useState, useEffect, useMemo } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { useCart } from '@/contexts/CartContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, ShoppingBag } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { SweetnessOption, WeightOption } from '@/types/product';
 
 const ProductDetail = () => {
   const { slug } = useParams();
-  const product = products.find(p => p.slug === slug);
   const { addToCart } = useCart();
   const { toast } = useToast();
-  const [sweetness, setSweetness] = useState<SweetnessOption | null>(null);
-  const [selectedWeight, setSelectedWeight] = useState<WeightOption>('250g');
 
-  if (!product) {
-    return (
-      <div className="container py-20 text-center">
-        <h1 className="font-display text-2xl font-bold mb-4">Product not found</h1>
-        <Link to="/shop"><Button variant="outline">Back to Shop</Button></Link>
-      </div>
+  const [product, setProduct] = useState<any>(null);
+  const [sweetness, setSweetness] =
+    useState<SweetnessOption | null>(null);
+  const [selectedWeight, setSelectedWeight] =
+    useState<WeightOption>('250g');
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      const { data } = await supabase
+        .from('products')
+        .select(`*, product_variants (*)`)
+        .eq('slug', slug)
+        .single();
+
+      if (data) setProduct(data);
+    };
+
+    fetchProduct();
+  }, [slug]);
+
+  /* ---------------- PRICE LOGIC ---------------- */
+
+  const lowestPrice = useMemo(() => {
+    if (!product?.product_variants?.length) return 0;
+    return Math.min(
+      ...product.product_variants.map((v: any) => v.price)
     );
-  }
+  }, [product]);
 
-  const currentVariant = product.variants.find(v => v.weight === selectedWeight)!;
+  const currentVariant = product?.product_variants?.find(
+    (v: any) =>
+      v.weight === selectedWeight &&
+      v.sweetness === sweetness
+  );
+
+  const displayPrice =
+    currentVariant?.price ?? lowestPrice;
+
+  /* ---------------- ADD TO CART ---------------- */
 
   const handleAddToCart = () => {
     if (!sweetness) {
-      toast({ title: 'Please select sweetness', description: 'Choose Jaggery or Dates before adding to cart.', variant: 'destructive' });
+      toast({
+        title: 'Select Sweetness',
+        description: 'Please choose Jaggery or Dates.',
+        variant: 'destructive',
+      });
       return;
     }
+
+    if (!currentVariant) {
+      toast({
+        title: 'Variant not available',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     addToCart({
       productId: product.id,
       productName: product.name,
       sweetness,
       weight: selectedWeight,
       price: currentVariant.price,
-      imageUrl: product.imageUrl,
+      imageUrl: product.image_url,
     });
-    toast({ title: 'Added to cart!', description: `${product.name} (${selectedWeight}, ${sweetness}) added.` });
+
+    toast({ title: 'Added to cart!' });
   };
+
+  if (!product)
+    return (
+      <div className="container py-20 text-center">
+        Loading...
+      </div>
+    );
+
+  /* ---------------- UNIQUE WEIGHTS ---------------- */
+
+  const uniqueWeights = [
+    ...new Set(
+      product.product_variants.map((v: any) => v.weight)
+    ),
+  ];
 
   return (
     <main className="container py-8 md:py-12">
-      <Link to="/shop" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
-        <ArrowLeft className="h-4 w-4" /> Back to Shop
+      <Link
+        to="/shop"
+        className="inline-flex items-center gap-2 mb-6"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to Shop
       </Link>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Image */}
         <div className="aspect-square rounded-lg overflow-hidden bg-muted">
-          <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+          <img
+            src={product.image_url}
+            alt={product.name}
+            className="w-full h-full object-cover"
+          />
         </div>
 
+        {/* Details */}
         <div>
-          <div className="flex items-center gap-2 mb-3">
-            {product.isOrganic && <Badge variant="secondary">🌿 100% Organic</Badge>}
-          </div>
-          <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">{product.name}</h1>
-          <p className="text-muted-foreground mb-6">{product.description}</p>
+          {product.is_organic && (
+            <Badge variant="secondary">
+              🌿 100% Organic
+            </Badge>
+          )}
 
-          <div className="mb-6">
-            <h3 className="font-semibold text-sm mb-2">Ingredients</h3>
-            <div className="flex flex-wrap gap-2">
-              {product.ingredients.map(ing => (
-                <span key={ing} className="text-xs px-3 py-1 rounded-full bg-muted text-muted-foreground">{ing}</span>
-              ))}
+          <h1 className="text-3xl font-bold mt-4 mb-4">
+            {product.name}
+          </h1>
+
+          <p className="mb-6">{product.description}</p>
+
+          {/* INGREDIENTS */}
+          {product.ingredients && (
+            <div className="mb-6">
+              <h3 className="font-semibold text-sm mb-2">
+                Ingredients
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {product.ingredients
+                  .split(',')
+                  .map((item: string, index: number) => (
+                    <span
+                      key={index}
+                      className="text-xs px-3 py-1 rounded-full bg-muted"
+                    >
+                      {item.trim()}
+                    </span>
+                  ))}
+              </div>
             </div>
-          </div>
+          )}
 
-          <div className="mb-6">
-            <h3 className="font-semibold text-sm mb-2">Nutritional Highlights</h3>
-            <div className="flex flex-wrap gap-2">
-              {product.nutritionalHighlights.map(nh => (
-                <Badge key={nh} variant="outline" className="text-xs">{nh}</Badge>
-              ))}
+          {/* NUTRITIONAL HIGHLIGHTS */}
+          {product.nutritional_highlights && (
+            <div className="mb-6">
+              <h3 className="font-semibold text-sm mb-2">
+                Nutritional Highlights
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {product.nutritional_highlights
+                  .split(',')
+                  .map((item: string, index: number) => (
+                    <span
+                      key={index}
+                      className="text-xs px-3 py-1 rounded-full border"
+                    >
+                      {item.trim()}
+                    </span>
+                  ))}
+              </div>
             </div>
-          </div>
+          )}
 
+          {/* Sweetness */}
           <div className="mb-6">
-            <h3 className="font-semibold text-sm mb-3">
-              Sweetness <span className="text-destructive">*</span>
+            <h3 className="font-semibold mb-3">
+              Sweetness *
             </h3>
+
             <div className="flex gap-3">
-              {(['jaggery', 'dates'] as SweetnessOption[]).map(opt => (
+              {(['jaggery', 'dates'] as SweetnessOption[]).map(
+                opt => (
+                  <button
+                    key={opt}
+                    onClick={() => setSweetness(opt)}
+                    className={`px-5 py-2.5 rounded-lg border text-sm font-medium transition-all
+                      ${sweetness === opt
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-border bg-card hover:border-primary/50'
+                      }`}
+                  >
+                    {opt.charAt(0).toUpperCase() +
+                      opt.slice(1)}
+                  </button>
+                )
+              )}
+            </div>
+          </div>
+
+          {/* Weight (always visible now) */}
+          <div className="mb-6">
+            <h3 className="font-semibold mb-3">
+              Weight *
+            </h3>
+
+            <div className="flex gap-3">
+              {uniqueWeights.map((weight: string) => (
                 <button
-                  key={opt}
-                  onClick={() => setSweetness(opt)}
-                  className={`px-5 py-2.5 rounded-lg border text-sm font-medium transition-all ${
-                    sweetness === opt
+                  key={weight}
+                  onClick={() =>
+                    setSelectedWeight(weight as WeightOption)
+                  }
+                  className={`px-5 py-2.5 rounded-lg border text-sm font-medium transition-all
+                    ${selectedWeight === weight
                       ? 'border-primary bg-primary text-primary-foreground'
-                      : 'border-border bg-card text-card-foreground hover:border-primary/50'
-                  }`}
+                      : 'border-border bg-card hover:border-primary/50'
+                    }`}
                 >
-                  {opt.charAt(0).toUpperCase() + opt.slice(1)}
+                  {weight}
                 </button>
               ))}
             </div>
           </div>
 
-          <div className="mb-8">
-            <h3 className="font-semibold text-sm mb-3">
-              Weight <span className="text-destructive">*</span>
-            </h3>
-            <div className="flex gap-3">
-              {product.variants.map(v => (
-                <button
-                  key={v.weight}
-                  onClick={() => setSelectedWeight(v.weight)}
-                  className={`px-5 py-2.5 rounded-lg border text-sm font-medium transition-all ${
-                    selectedWeight === v.weight
-                      ? 'border-primary bg-primary text-primary-foreground'
-                      : 'border-border bg-card text-card-foreground hover:border-primary/50'
-                  }`}
-                >
-                  {v.weight}
-                </button>
-              ))}
-            </div>
+          {/* PRICE */}
+          <div className="text-2xl font-bold mb-6">
+            ${displayPrice}
           </div>
 
-          <div className="flex items-center gap-6 mb-6">
-            <span className="font-display text-3xl font-bold text-foreground">₹{currentVariant.price}</span>
-          </div>
-
-          <Button size="lg" className="w-full py-6 font-semibold text-base" onClick={handleAddToCart}>
-            <ShoppingBag className="h-5 w-5 mr-2" /> Add to Cart
+          <Button
+            size="lg"
+            className="w-full"
+            onClick={handleAddToCart}
+          >
+            <ShoppingBag className="h-5 w-5 mr-2" />
+            Add to Cart
           </Button>
         </div>
       </div>

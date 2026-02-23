@@ -22,7 +22,7 @@ const ProductCard = ({ product }: { product: Product }) => (
         <h3 className="font-display text-lg font-semibold text-card-foreground mb-1">{product.name}</h3>
         <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{product.description}</p>
         <p className="text-base font-semibold text-primary">
-          Starting from ₹{product.variants[0].price}
+          Starting from ${product.variants[0].price}
         </p>
       </div>
     </div>
