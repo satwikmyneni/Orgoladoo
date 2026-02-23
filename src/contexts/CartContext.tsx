@@ -137,7 +137,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
 
     // 4️⃣ Build message
-  const usdFormatter = new Intl.NumberFormat('en-US', {
+const usdFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'USD'
 });
@@ -154,7 +154,8 @@ Items:
 `;
 
 items.forEach(item => {
-  const subtotal = item.price * item.quantity;
+  const numericPrice = Number(item.price.toString().replace(/[^0-9.]/g, ""));
+  const subtotal = numericPrice * item.quantity;
 
   message += `- ${item.productName}
   Weight: ${item.weight}
@@ -168,7 +169,6 @@ items.forEach(item => {
 message += `Total: ${usdFormatter.format(totalPrice)}
 
 Please confirm availability.`;
-
     const url = `https://wa.me/${settings.whatsapp_number}?text=${encodeURIComponent(
       message
     )}`;
