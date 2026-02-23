@@ -153,12 +153,12 @@ Items:
   Weight: ${item.weight}
   Sweetness: ${item.sweetness}
   Quantity: ${item.quantity}
-  Subtotal: Rs ${item.price * item.quantity}
+  Subtotal: $ ${item.price * item.quantity}
 
 `;
     });
 
-    message += `Total: Rs ${totalPrice}
+    message += `Total: $ ${totalPrice}
 
 Please confirm availability.`;
 
