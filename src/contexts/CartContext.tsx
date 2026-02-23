@@ -137,7 +137,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
 
     // 4️⃣ Build message
-    let message = `Hello,
+  const usdFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD'
+});
+
+let message = `Hello,
 
 Order ID: ${orderNumber}
 
@@ -148,17 +153,19 @@ Items:
 
 `;
 
-    items.forEach(item => {
-      message += `- ${item.productName}
+items.forEach(item => {
+  const subtotal = item.price * item.quantity;
+
+  message += `- ${item.productName}
   Weight: ${item.weight}
   Sweetness: ${item.sweetness}
   Quantity: ${item.quantity}
-  Subtotal: $ ${item.price * item.quantity}
+  Subtotal: ${usdFormatter.format(subtotal)}
 
 `;
-    });
+});
 
-    message += `Total: $ ${totalPrice}
+message += `Total: ${usdFormatter.format(totalPrice)}
 
 Please confirm availability.`;
 
